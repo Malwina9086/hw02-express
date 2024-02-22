@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const bcrypt = require("bcrypt");
+const gravatar = require("gravatar");
 
-const user = new Schema({
+const userSchema = new Schema({
   password: {
     type: String,
     required: [true, "Password is required"],
@@ -21,9 +22,12 @@ const user = new Schema({
     type: String,
     default: null,
   },
+  avatarURL: {
+    type: String,
+  },
 });
 
-user.pre("save", async function (next) {
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
@@ -31,12 +35,15 @@ user.pre("save", async function (next) {
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+
+    this.avatarURL = gravatar.url(this.email, { s: "250", d: "retro" }, true);
+
     next();
   } catch (error) {
     next(error);
   }
 });
 
-const User = mongoose.model("user", user);
+const User = mongoose.model("user", userSchema);
 
 module.exports = User;

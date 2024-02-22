@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const path = require("path");
 
 require("dotenv").config();
 
@@ -8,14 +9,15 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// cors
 app.use(cors());
 
-const contactsRouter = require("./routes/api/index");
+const contactsRouter = require("./routes/api/contacts");
 app.use("/api/contacts", contactsRouter);
 
 const usersRouter = require("./routes/api/auth");
 app.use("/api/auth", usersRouter);
+
+app.use("/avatars", express.static(path.join(__dirname, "public", "avatars")));
 
 app.use((_, res, __) => {
   res.status(404).json({

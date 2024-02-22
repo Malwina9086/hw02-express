@@ -1,10 +1,14 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../schemas/users.schema");
+const path = require("path");
+const Jimp = require("jimp");
 const {
   loginValidation,
   signupValidation,
 } = require("../validators/user.validation");
+
+const avatarDir = path.resolve("public", "avatars");
 
 const login = async (email, password) => {
   const { error } = loginValidation({ email, password });
@@ -99,4 +103,29 @@ const logout = async (user) => {
   }
 };
 
-module.exports = { login, current, signup, logout };
+const updateAvatarUser = async (file, userId) => {
+  try {
+    if (!file) {
+      throw new Error("No file uploaded");
+    }
+
+    const { buffer, originalname } = file;
+    const imagePath = path.join(avatarDir, `${Date.now()}_${originalname}`);
+
+    const image = await Jimp.read(buffer);
+    await image.resize(250, 250).writeAsync(imagePath);
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { avatarURL: imagePath },
+      { new: true }
+    );
+
+    return { avatarURL: user.avatarURL };
+  } catch (error) {
+    console.error("updateAvatarError:", error.message);
+    throw error;
+  }
+};
+
+module.exports = { login, current, signup, logout, updateAvatarUser };

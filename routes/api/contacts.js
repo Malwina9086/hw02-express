@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const { contactSchema } = require("../../validators/contacts.validation");
 const {
-  listContacts,
-  getContactById,
-  removeContact,
   addContact,
+  getContactById,
+  listContacts,
+  removeContact,
   updateContact,
   updateStatusContact,
 } = require("../../controller/contacts.js");
-const { contactSchema } = require("../../validators/validation.js");
 
 router.get("/", async (req, res, next) => {
   try {
