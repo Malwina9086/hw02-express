@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../../controller/user");
 const authenticate = require("../../middleware/authenticate");
+const upload = require("../../middleware/uploadAvatar");
 
 router.post("/signup", async (req, res, next) => {
   try {
@@ -29,6 +30,15 @@ router.post("/login", async (req, res, next) => {
 });
 
 router.use(authenticate);
+
+router.patch("/avatars", upload.single("avatar"), async (req, res, next) => {
+  try {
+    const updatedAvatar = await userController.updateAvatarUser(req);
+    res.status(200).json(updatedAvatar);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get("/logout", async (req, res, next) => {
   try {
