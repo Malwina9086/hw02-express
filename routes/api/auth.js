@@ -29,6 +29,28 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
+router.post("/verify", async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "missing required field email" });
+    }
+
+    const result = await userController.resendVerificationEmail(email);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    if (
+      error.message === "User not found" ||
+      error.message === "Verification has already been passed"
+    ) {
+      return res.status(400).json({ message: error.message });
+    }
+    next(error);
+  }
+});
+
 router.use(authenticate);
 
 router.patch("/avatars", upload.single("avatar"), async (req, res, next) => {
