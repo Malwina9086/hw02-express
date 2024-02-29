@@ -29,12 +29,29 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
-router.post("/verify", async (req, res, next) => {
+router.get("/verify/:verificationToken", async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+
+    if (!verificationToken) {
+      return res.status(400).json({ message: "Missing verification token" });
+    }
+
+    const result = await userController.verifyUser(verificationToken);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Ścieżka do ponownego wysłania wiadomości weryfikacyjnej
+router.post("/verify/resend", async (req, res, next) => {
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: "missing required field email" });
+      return res.status(400).json({ message: "Missing required field email" });
     }
 
     const result = await userController.resendVerificationEmail(email);

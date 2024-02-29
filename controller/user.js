@@ -1,9 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../schemas/users.schema");
+const User = require("../services/schemas/users.schema");
 const path = require("path");
 const Jimp = require("jimp");
-const nodemailer = require("nodemailer");
+const sendVerificationEmail = require("../services/emailService");
 const { v4: uuidv4 } = require("uuid");
 const {
   loginValidation,
@@ -144,37 +144,7 @@ const verifyUser = async (verificationToken) => {
 
     return { message: "Verification successful" };
   } catch (error) {
-    console.error("Verify User Error:", error.message);
-    throw error;
-  }
-};
-
-const sendVerificationEmail = async (email, verificationToken) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Verification Email",
-      text: `Click the following link to verify your email: http://your_api_base_url/users/verify/${verificationToken}`,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Email Sending Error:", error.message);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
-    });
-  } catch (error) {
-    console.error("Send Verification Email Error:", error.message);
+    console.error("Verify User Error:", error);
     throw error;
   }
 };
