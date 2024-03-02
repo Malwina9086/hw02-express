@@ -1,33 +1,22 @@
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const sendVerificationEmail = () => {
-  const recipientEmail = process.env.SENDGRID_EMAIL_USER;
-  const verificationToken = process.env.SENDGRID_API_KEY;
-
-  if (!recipientEmail || !verificationToken) {
-    console.error(
-      "Recipient email or verification token not provided in environment variables."
-    );
-    return;
-  }
-
+const sendVerificationEmail = async (email, verificationToken) => {
   const msg = {
     from: process.env.SENDGRID_EMAIL_USER,
-    to: recipientEmail,
+    to: email,
     subject: "Verification Email",
-    text: `Click the following link to verify your email: http://localhost:3000/users/verify/${verificationToken}`,
+    text: "Click the following link to verify your email",
+    html: `<strong>Click the following link to verify your email:</strong><br><a href="http://localhost:3000/users/verify/${verificationToken}">Verification Link</a>`,
   };
 
-  return sgMail.send(msg);
-};
-
-sendVerificationEmail()
-  .then(() => {
+  try {
+    await sgMail.send(msg);
     console.log("Email sent");
-  })
-  .catch((error) => {
+  } catch (error) {
     console.error(error);
-  });
+    throw error;
+  }
+};
 
 module.exports = sendVerificationEmail;
