@@ -1,8 +1,10 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../schemas/users.schema");
+const User = require("../services/schemas/users.schema");
 const path = require("path");
 const Jimp = require("jimp");
+const sendVerificationEmail = require("../services/emailService");
+const { v4: uuidv4 } = require("uuid");
 const {
   loginValidation,
   signupValidation,
@@ -128,4 +130,62 @@ const updateAvatarUser = async (file, userId) => {
   }
 };
 
-module.exports = { login, current, signup, logout, updateAvatarUser };
+const verifyUser = async (verificationToken) => {
+  try {
+    const user = await User.findOne({ verificationToken });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    user.verificationToken = null;
+    user.verify = true;
+    await user.save();
+
+    return { message: "Verification successful" };
+  } catch (error) {
+    console.error("Verify User Error:", error);
+    throw error;
+  }
+};
+
+const resendVerificationEmail = async (email) => {
+  try {
+    const { error } = signupValidation({ email });
+    if (error) {
+      throw new Error("Missing required field email");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.verify) {
+      throw new Error("Verification has already been passed");
+    }
+
+    const newVerificationToken = uuidv4();
+
+    user.verificationToken = newVerificationToken;
+    await user.save();
+
+    sendVerificationEmail(email, newVerificationToken);
+
+    return { message: "Verification email sent" };
+  } catch (error) {
+    console.error("Resend Verification Email Error:", error.message);
+    throw error;
+  }
+};
+
+module.exports = {
+  login,
+  current,
+  signup,
+  logout,
+  updateAvatarUser,
+  verifyUser,
+  resendVerificationEmail,
+};

@@ -29,6 +29,45 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
+router.get("/verify/:verificationToken", async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+
+    if (!verificationToken) {
+      return res.status(400).json({ message: "Missing verification token" });
+    }
+
+    const result = await userController.verifyUser(verificationToken);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Ścieżka do ponownego wysłania wiadomości weryfikacyjnej
+router.post("/verify/resend", async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Missing required field email" });
+    }
+
+    const result = await userController.resendVerificationEmail(email);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    if (
+      error.message === "User not found" ||
+      error.message === "Verification has already been passed"
+    ) {
+      return res.status(400).json({ message: error.message });
+    }
+    next(error);
+  }
+});
+
 router.use(authenticate);
 
 router.patch("/avatars", upload.single("avatar"), async (req, res, next) => {
